@@ -4,6 +4,7 @@ import subprocess
 import sys
 import platform
 import json
+import time
 from docx import Document
 import openpyxl
 from pprint import pprint
@@ -118,8 +119,29 @@ def write_to_excel(parsed_data, excel_file_path, header_mapping, opportunity_own
     sheet.insert_rows(last_row + 1)
     for col_index, value in enumerate(new_row, start=1):
         sheet.cell(row=last_row + 1, column=col_index).value = value
-    wb.save(excel_file_path)
 
+    wb.save(excel_file_path)
+    print("✅ Excel file updated successfully.")
+    print("⚠️ Warning: Please CLOSE then REOPEN Excel file to see the updated content.")
+
+def is_file_open(filepath):
+    try:
+        # Try renaming the file to itself — fails if locked
+        os.rename(filepath, filepath)
+        return False
+    except OSError:
+        return True
+
+def open_file(file_path):
+    try:
+        if platform.system() == "Darwin":  # macOS
+            subprocess.run(["open", file_path])
+        elif platform.system() == "Windows":
+            os.startfile(file_path)
+        else:  # Linux or unsupported
+            print(f"📎 Saved file: {file_path} (open manually)")
+    except Exception as e:
+        print(f"❌ Could not open file: {e}")
 
 def get_latest_valid_word_file(word_file_dir):
     word_files = [file for pattern in ["*.doc*", "*.DOC*"]
@@ -149,6 +171,12 @@ def get_latest_excel_file(excel_file_dir):
         print("⚠️ Multiple Excel files found. Using the most recently modified file.")
 
     return excel_files[0]
+
+def reveal_file_in_file_explorer(file_path):
+    if platform.system() == "Darwin":
+        subprocess.run(["open", "-R", file_path])
+    elif platform.system() == "Windows":
+        subprocess.run(["explorer", "/select,", file_path])
 
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -183,3 +211,5 @@ if __name__ == "__main__":
     }
 
     write_to_excel(parsed_data, excel_file_path, excel_mapping, OPPORTUNITY_OWNER)
+    print(f"📂 Click or open: file://{os.path.abspath(excel_file_path)}")
+
