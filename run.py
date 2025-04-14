@@ -133,6 +133,22 @@ def get_latest_valid_word_file(word_file_dir):
         print("⚠️ Multiple Word files found. Using the most recently modified file.")
     return word_files[0]
 
+def get_latest_excel_file(excel_file_dir):
+    excel_files = [
+        file for pattern in ["*.xlsx", "*.xlsm"]
+        for file in glob.glob(os.path.join(excel_file_dir, pattern))
+        if not os.path.basename(file).startswith("~$")  # skip temp/lock files
+    ]
+
+    if not excel_files:
+        print("❌ Error: No Excel files found in 'excel_file/' folder!")
+        sys.exit(1)
+
+    if len(excel_files) > 1:
+        excel_files.sort(key=os.path.getmtime, reverse=True)
+        print("⚠️ Multiple Excel files found. Using the most recently modified file.")
+
+    return excel_files[0]
 
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -141,11 +157,12 @@ if __name__ == "__main__":
     print(f"📄 Using Word file: {word_file}")
 
     parsed_data = parse_docx_table(word_file)
-    print("################################################################")
-    print(f"Parsed data: {json.dumps(parsed_data, indent=2)}")
+    print("####################### Data Parsed #############################")
+    # print(f"Parsed data: {json.dumps(parsed_data, indent=2)}") # for debugging
 
-    excel_file_path = os.path.join(script_dir, "./excel_file/notes on JWT reg tracker.xlsx")
-    print(f"Resolved Excel path: {os.path.abspath(excel_file_path)}")
+    excel_file_dir = os.path.join(script_dir, "excel_file")
+    excel_file_path = get_latest_excel_file(excel_file_dir)
+    print(f"📄 Using Excel file: {excel_file_path}")
 
     excel_mapping = {
         "Initial Info.Date": "Date",
